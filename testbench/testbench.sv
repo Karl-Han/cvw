@@ -225,11 +225,15 @@ module testbench;
 
   string  signame, memfilename, bootmemfilename, pathname;
   integer begin_signature_addr, end_signature_addr, signature_size;
+  int unsigned count_validate;
+  longint unsigned count_clk;
 
   assign ResetThreshold = 3'd5;
 
   initial begin
     TestBenchReset = 1;
+    count_validate = 0;
+    count_clk = 0;
     # 100;
     TestBenchReset = 0;
   end
@@ -290,6 +294,7 @@ module testbench;
   assign end_signature_addr = ProgramAddrLabelArray["sig_end_canary"];
   assign signature_size = end_signature_addr - begin_signature_addr;
   always @(posedge clk) begin
+    count_clk = count_clk+1;
     if(SelectTest) begin
       if (riscofTest) memfilename = {pathname, tests[test], "/ref/ref.elf.memfile"};
       else if(TEST == "buildroot") begin 
@@ -323,6 +328,7 @@ module testbench;
         $stop;
       end
     if(Validate) begin
+      count_validate = count_validate +1;
       if (TEST == "embench") begin
         // Writes contents of begin_signature to .sim.output file
         // this contains instret and cycles for start and end of test run, used by embench 
@@ -357,7 +363,13 @@ module testbench;
       if (test == tests.size()) begin
         if (totalerrors == 0) $display("SUCCESS! All tests ran without failures.");
         else $display("FAIL: %d test programs had errors", totalerrors);
+        $display("validate = %d", count_validate);
+        $display("count_clk = %ld", count_clk);
+`ifdef verilator
+        $finish;
+`else
         $stop; // if this is changed to $finish, wally-batch.do does not go to the next step to run coverage
+`endif
       end
     end
   end
