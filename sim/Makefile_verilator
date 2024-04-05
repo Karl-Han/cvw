@@ -1,0 +1,31 @@
+.PHONY: profile run compile compile_profile questa clean
+
+OPT?=-O3
+PARAMS?=-DVERILATOR=1 --no-trace-top
+NONPROF?=--stats
+TEST?=arch64i
+
+profile: run
+	gprof ./obj_dir/Vtestbench gmon.out > gmon.log
+	verilator_profcfunc gmon.log > gmon.log2
+
+run:
+	time ./obj_dir/Vtestbench
+	
+compile: clean
+	time verilator -GTEST="\"$(TEST)\"" $(OPT) $(PARAMS) $(NONPROF) \
+	--timescale "1ns/1ns" --timing --binary --top-module testbench  --relative-includes \
+	-cc \
+	"-I${WALLY}/config/shared" "-I${WALLY}/config/rv64gc" ${WALLY}/src/cvw.sv ${WALLY}/testbench/testbench.sv ${WALLY}/testbench/common/*.sv ${WALLY}/src/*/*.sv ${WALLY}/src/*/*/*.sv
+
+compile_profile: clean
+	time verilator -GTEST="\"$(TEST)\"" --prof-cfuncs $(OPT) $(PARAMS) \
+	--timescale "1ns/1ns" --timing --binary --top-module testbench  --relative-includes \
+	-cc \
+	"-I${WALLY}/config/shared" "-I${WALLY}/config/rv64gc" ${WALLY}/src/cvw.sv ${WALLY}/testbench/testbench.sv ${WALLY}/testbench/common/*.sv ${WALLY}/src/*/*.sv ${WALLY}/src/*/*/*.sv
+
+questa:
+	time vsim -c -do "do ${WALLY}/sim/wally-batch.do rv64gc $(TEST)"
+
+clean:
+	rm -rf ./obj_dir
