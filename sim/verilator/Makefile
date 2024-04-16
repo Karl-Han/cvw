@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 .PHONY: profile run questa clean
 
 OPT=
@@ -23,12 +24,12 @@ profile: obj_dir_profiling/Vtestbench_$(WALLYCONF)
 
 run: obj_dir_non_profiling/Vtestbench_$(WALLYCONF)
 	mkdir -p $(WORKING_DIR)/logs
-	time $(WORKING_DIR)/obj_dir_non_profiling/Vtestbench_$(WALLYCONF) +TEST=$(TEST) 2>&1 > $(WORKING_DIR)/logs/$(WALLYCONF)_$(TEST).log
+	$(WORKING_DIR)/obj_dir_non_profiling/Vtestbench_$(WALLYCONF) +TEST=$(TEST) 2>&1 > $(WORKING_DIR)/logs/$(WALLYCONF)_$(TEST).log
 	echo "Please check $(WORKING_DIR)/logs/$(WALLYCONF)_$(TEST).log for logs and output files."
 	
 obj_dir_non_profiling/Vtestbench_$(WALLYCONF): $(SOURCE)
 	mkdir -p obj_dir_non_profiling
-	time verilator \
+	verilator \
 	--Mdir obj_dir_non_profiling -o Vtestbench_$(WALLYCONF) \
 	-cc --binary \
 	$(OPT) $(PARAMS) $(NONPROF) \
@@ -39,7 +40,7 @@ obj_dir_non_profiling/Vtestbench_$(WALLYCONF): $(SOURCE)
 	
 obj_dir_profiling/Vtestbench_$(WALLYCONF): $(SOURCE)
 	mkdir -p obj_dir_profiling
-	time verilator \
+	verilator \
 	--Mdir obj_dir_profiling -o Vtestbench_$(WALLYCONF) \
 	-cc --binary \
 	--prof-cfuncs $(OPT) $(PARAMS) \
@@ -48,7 +49,7 @@ obj_dir_profiling/Vtestbench_$(WALLYCONF): $(SOURCE)
 	"-I${WALLY}/config/shared" "-I${WALLY}/config/$(WALLYCONF)" ${WALLY}/src/cvw.sv ${WALLY}/testbench/testbench.sv ${WALLY}/testbench/common/*.sv ${WALLY}/src/*/*.sv ${WALLY}/src/*/*/*.sv
 
 questa:
-	time vsim -c -do "do ${WALLY}/sim/wally-batch.do $(WALLYCONF) $(TEST)"
+	vsim -c -do "do ${WALLY}/sim/wally-batch.do $(WALLYCONF) $(TEST)"
 
 clean:
 	rm -rf $(WORKING_DIR)/obj_dir_non_profiling $(WORKING_DIR)/obj_dir_profiling $(WORKING_DIR)/logs $(WORKING_DIR)/logs_profiling
