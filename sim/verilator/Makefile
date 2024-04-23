@@ -26,6 +26,9 @@ DEPENDENCIES=${WALLY}/config/shared/*.vh $(SOURCES)
 
 default: run
 
+open_vcd:
+	gtkwave -f $(VERILATOR_DIR)/testbench.vcd
+
 profile: obj_dir_profiling/Vtestbench_$(WALLYCONF)
 	$(VERILATOR_DIR)/obj_dir_profiling/Vtestbench_$(WALLYCONF) +TEST=$(TEST) 
 	mv gmon.out gmon_$(WALLYCONF).out
@@ -69,4 +72,8 @@ questa:
 	vsim -c -do "do ${WALLY}/sim/wally-batch.do $(WALLYCONF) $(TEST)"
 
 clean:
-	rm -rf $(VERILATOR_DIR)/wkdir $(VERILATOR_DIR)/obj_dir_profiling $(VERILATOR_DIR)/logs $(VERILATOR_DIR)/logs_profiling
+	rm -rf $(VERILATOR_DIR)/wkdir \
+		$(VERILATOR_DIR)/obj_dir_profiling \
+		$(VERILATOR_DIR)/logs \
+		$(VERILATOR_DIR)/logs_profiling \
+		$(VERILATOR_DIR)/testbench.vcd
